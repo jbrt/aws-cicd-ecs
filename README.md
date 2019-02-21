@@ -56,3 +56,9 @@ this port).
 
 You will find an very basic example in the "code-sample" directory. It's nothing
 more than a "hello-world".
+
+## TODO ##
+
+CodeDeploy is now able to deploy applications into ECS/Fargate in Blue/Green mode, 
+this template will be soon update to implement this feature.
+
