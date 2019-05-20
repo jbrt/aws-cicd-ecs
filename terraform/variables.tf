@@ -1,6 +1,4 @@
 # Global variables
-variable "access_key" {}
-variable "secret_key" {}
 
 variable "region" {
   description = "Region where all AWS objects will be created"
