@@ -15,20 +15,10 @@ private subnets, in 2 different AZs).
 
 ## Using of Terraform for creating the pipeline ##
 
-To create the AWS subsequents resources, we'll use Terraform. Clone this 
-repository, and in the terraform directory create a **terraform.tfvars** file 
-with :
-
-```
-access_key = "YOUR_ACCESS_KEY"
-secret_key = "YOUR_SECRET_KEY"
-```
-
-Then, you can type these commands:
+You can use these commands:
 
 ```bash
   terraform init
-  terraform get -update=true
   terraform plan
   terraform apply
 ```
