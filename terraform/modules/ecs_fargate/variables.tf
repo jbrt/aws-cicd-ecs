@@ -12,7 +12,6 @@ variable "vpc_id" {
 }
 
 variable "security_groups_ids" {
-  type        = "list"
   description = "The SGs to use"
 }
 
