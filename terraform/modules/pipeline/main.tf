@@ -11,79 +11,79 @@ resource "aws_s3_bucket" "source" {
   acl           = "private"
   force_destroy = true
 
-  tags {
+  tags = {
     Name        = "${var.environment}-devops-ecs-testing"
-    Environment = "${var.environment}"
+    Environment = var.environment
     Terraform   = true
   }
 }
 
 # Creating of a Git repository
 resource "aws_codecommit_repository" "source_code" {
-  repository_name = "${var.repository_source}"
+  repository_name = var.repository_source
   description     = "This is the Sample App Repository"
 }
 
 # IAM role for the pipeline
 resource "aws_iam_role" "codepipeline_role" {
-  name               = "codepipeline-role"
+  name = "codepipeline-role"
 
-  assume_role_policy = "${file("${path.module}/policies/codepipeline_role.json")}"
+  assume_role_policy = file("${path.module}/policies/codepipeline_role.json")
 }
 
 # IAM policy for the pipeline
 data "template_file" "codepipeline_policy" {
-  template = "${file("${path.module}/policies/codepipeline.json")}"
+  template = file("${path.module}/policies/codepipeline.json")
 
-  vars {
-    aws_s3_bucket_arn = "${aws_s3_bucket.source.arn}"
+  vars = {
+    aws_s3_bucket_arn = aws_s3_bucket.source.arn
   }
 }
 
 resource "aws_iam_role_policy" "codepipeline_policy" {
   name   = "codepipeline_policy"
-  role   = "${aws_iam_role.codepipeline_role.id}"
-  policy = "${data.template_file.codepipeline_policy.rendered}"
+  role   = aws_iam_role.codepipeline_role.id
+  policy = data.template_file.codepipeline_policy.rendered
 }
 
 # CodeBuild project
 resource "aws_iam_role" "codebuild_role" {
   name               = "codebuild-role"
-  assume_role_policy = "${file("${path.module}/policies/codebuild_role.json")}"
+  assume_role_policy = file("${path.module}/policies/codebuild_role.json")
 }
 
 data "template_file" "codebuild_policy" {
-  template = "${file("${path.module}/policies/codebuild_policy.json")}"
+  template = file("${path.module}/policies/codebuild_policy.json")
 
-  vars {
-    aws_s3_bucket_arn = "${aws_s3_bucket.source.arn}"
+  vars = {
+    aws_s3_bucket_arn = aws_s3_bucket.source.arn
   }
 }
 
 resource "aws_iam_role_policy" "codebuild_policy" {
-  name        = "codebuild-policy"
-  role        = "${aws_iam_role.codebuild_role.id}"
-  policy      = "${data.template_file.codebuild_policy.rendered}"
+  name   = "codebuild-policy"
+  role   = aws_iam_role.codebuild_role.id
+  policy = data.template_file.codebuild_policy.rendered
 }
 
 # Using the buildspec file
 data "template_file" "buildspec" {
-  template = "${file("${path.module}/buildspec.yml")}"
+  template = file("${path.module}/buildspec.yml")
 
-  vars {
-    repository_url     = "${var.repository_url}"
-    region             = "${var.region}"
-    cluster_name       = "${var.ecs_cluster_name}"
-    subnet_id          = "${var.run_task_subnet_id}"
-    security_group_ids = "${join(",", var.run_task_security_group_ids)}"
+  vars = {
+    repository_url     = var.repository_url
+    region             = var.region
+    cluster_name       = var.ecs_cluster_name
+    subnet_id          = var.run_task_subnet_id
+    security_group_ids = join(",", var.run_task_security_group_ids)
   }
 }
 
 
 resource "aws_codebuild_project" "devops-ecs-testing" {
-  name          = "${var.codebuild_project}"
+  name          = var.codebuild_project
   build_timeout = "10"
-  service_role  = "${aws_iam_role.codebuild_role.arn}"
+  service_role  = aws_iam_role.codebuild_role.arn
 
   artifacts {
     type = "CODEPIPELINE"
@@ -98,17 +98,17 @@ resource "aws_codebuild_project" "devops-ecs-testing" {
 
   source {
     type      = "CODEPIPELINE"
-    buildspec = "${data.template_file.buildspec.rendered}"
+    buildspec = data.template_file.buildspec.rendered
   }
 }
 
 # Create and define the pipeline
 resource "aws_codepipeline" "pipeline" {
-  name     = "${var.pipeline_name}"
-  role_arn = "${aws_iam_role.codepipeline_role.arn}"
+  name     = var.pipeline_name
+  role_arn = aws_iam_role.codepipeline_role.arn
 
   artifact_store {
-    location = "${aws_s3_bucket.source.bucket}"
+    location = aws_s3_bucket.source.bucket
     type     = "S3"
   }
 
@@ -123,8 +123,8 @@ resource "aws_codepipeline" "pipeline" {
       version          = "1"
       output_artifacts = ["source"]
 
-      configuration {
-        RepositoryName = "${var.repository_source}"
+      configuration = {
+        RepositoryName = var.repository_source
         BranchName     = "master"
       }
     }
@@ -142,8 +142,8 @@ resource "aws_codepipeline" "pipeline" {
       input_artifacts  = ["source"]
       output_artifacts = ["imagedefinitions"]
 
-      configuration {
-        ProjectName = "${var.codebuild_project}"
+      configuration = {
+        ProjectName = var.codebuild_project
       }
     }
   }
@@ -159,9 +159,9 @@ resource "aws_codepipeline" "pipeline" {
       input_artifacts = ["imagedefinitions"]
       version         = "1"
 
-      configuration {
-        ClusterName = "${var.ecs_cluster_name}"
-        ServiceName = "${var.ecs_service_name}"
+      configuration = {
+        ClusterName = var.ecs_cluster_name
+        ServiceName = var.ecs_service_name
         FileName    = "imagedefinitions.json"
       }
     }

@@ -5,7 +5,7 @@ variable "actifact_bucket" {
 
 variable "codebuild_project" {
   description = "The name of the CodeBuild project"
-  type        = "string"  
+  type        = "string"
 }
 
 variable "pipeline_name" {
@@ -35,7 +35,7 @@ variable "repository_url" {
 
 variable "repository_source" {
   description = ""
-  type        = "string"  
+  type        = "string"
 }
 
 variable "run_task_subnet_id" {
